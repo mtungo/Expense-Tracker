@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "amount": 12.5,
+    "category": "food",
+    "description": "Lunch",
+    "date": "2026-04-02 17:13:28"
+  },
+  {
+    "id": 2,
+    "amount": 35.0,
+    "category": "transport",
+    "description": "Taxi",
+    "date": "2026-04-02 17:13:28"
+  },
+  {
+    "id": 3,
+    "amount": 8.75,
+    "category": "food",
+    "description": "Coffee and snack",
+    "date": "2026-04-02 17:13:28"
+  },
+  {
+    "id": 4,
+    "amount": 22.0,
+    "category": "ds",
+    "description": "no",
+    "date": "2026-04-02 17:15:39"
+  }
+]
