@@ -26,5 +26,12 @@
     "category": "ds",
     "description": "no",
     "date": "2026-04-02 17:15:39"
+  },
+  {
+    "id": "7c8667fa-41a5-4010-b693-382aa30f7980",
+    "amount": 2.0,
+    "category": "Car",
+    "description": "new car",
+    "date": "2026-04-03 10:22:32"
   }
 ]
