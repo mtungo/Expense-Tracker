@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(pip install:*)",
-      "Skill(expense-tracker-code-refactor)"
+      "Skill(expense-tracker-code-refactor)",
+      "Bash(python -m pytest test_api.py -v)",
+      "Bash(python -m pytest test_expense_tracker.py -v)"
     ]
   }
 }

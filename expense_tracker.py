@@ -286,6 +286,73 @@ class ExpenseTracker:
         return [expense for expense in self.expenses
                 if expense.category.lower() == category.lower()]
 
+    def get_expense_by_id(self, expense_id: str) -> Optional[Expense]:
+        """
+        Get a single expense by its ID.
+
+        Args:
+            expense_id: The expense ID to look up
+
+        Returns:
+            The Expense if found, None otherwise
+        """
+        for expense in self.expenses:
+            if expense.expense_id == expense_id:
+                return expense
+        return None
+
+    def update_expense(self, expense_id: str, amount: Optional[float] = None,
+                       category: Optional[str] = None,
+                       description: Optional[str] = None) -> Optional[Expense]:
+        """
+        Update an existing expense.
+
+        Args:
+            expense_id: The ID of the expense to update
+            amount: New amount (optional)
+            category: New category (optional)
+            description: New description (optional)
+
+        Returns:
+            The updated Expense if successful, None otherwise
+        """
+        expense = self.get_expense_by_id(expense_id)
+        if expense is None:
+            return None
+
+        if amount is not None:
+            if not InputValidator.validate_amount(amount):
+                return None
+            expense.amount = amount
+        if category is not None:
+            if not InputValidator.validate_text_field(category):
+                return None
+            expense.category = category.strip()
+        if description is not None:
+            if not InputValidator.validate_text_field(description):
+                return None
+            expense.description = description.strip()
+
+        self.save_data()
+        return expense
+
+    def delete_expense(self, expense_id: str) -> bool:
+        """
+        Delete an expense by its ID.
+
+        Args:
+            expense_id: The ID of the expense to delete
+
+        Returns:
+            True if deleted, False if not found
+        """
+        expense = self.get_expense_by_id(expense_id)
+        if expense is None:
+            return False
+        self.expenses.remove(expense)
+        self.save_data()
+        return True
+
     def get_available_categories(self) -> List[str]:
         """
         Get a list of all unique categories.
