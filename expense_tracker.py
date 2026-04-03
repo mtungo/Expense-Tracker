@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from collections import defaultdict
-from typing import List, Dict, Any, Optional
+from typing import Callable, List, Dict, Any, Optional
 from uuid import uuid4
 
 
@@ -174,12 +174,10 @@ class DataStorage(ABC):
     @abstractmethod
     def save_expenses(self, expenses: List[Expense]) -> None:
         """Save expenses to storage."""
-        pass
 
     @abstractmethod
     def load_expenses(self) -> List[Expense]:
         """Load expenses from storage."""
-        pass
 
 
 class JsonFileStorage(DataStorage):
@@ -317,7 +315,13 @@ class ExpenseTrackerUI:
             tracker: The ExpenseTracker instance to use for data operations
         """
         self.tracker = tracker
-        self.formatter = TableFormatter()
+        self._menu_actions: Dict[str, Callable[[], None]] = {
+            "1": self.handle_add_expense,
+            "2": self.handle_view_all_expenses,
+            "3": self.handle_calculate_total,
+            "4": self.handle_view_by_category,
+            "5": self.handle_filter_by_category,
+        }
 
     def display_menu(self) -> None:
         """Display the main menu options."""
@@ -349,7 +353,7 @@ class ExpenseTrackerUI:
     def handle_view_all_expenses(self) -> None:
         """Handle viewing all expenses."""
         expenses = self.tracker.get_all_expenses()
-        self.formatter.print_expenses_table(expenses)
+        TableFormatter.print_expenses_table(expenses)
 
     def handle_calculate_total(self) -> None:
         """Handle calculating total spending."""
@@ -362,7 +366,7 @@ class ExpenseTrackerUI:
         if not category_totals:
             print("No expenses recorded.")
             return
-        self.formatter.print_category_breakdown(category_totals)
+        TableFormatter.print_category_breakdown(category_totals)
 
     def handle_filter_by_category(self) -> None:
         """Handle filtering expenses by category."""
@@ -380,7 +384,7 @@ class ExpenseTrackerUI:
             if InputValidator.validate_choice(cat_choice, 1, len(categories)):
                 selected_category = categories[cat_choice - 1]
                 filtered_expenses = self.tracker.filter_by_category(selected_category)
-                self.formatter.print_category_expenses(filtered_expenses, selected_category)
+                TableFormatter.print_category_expenses(filtered_expenses, selected_category)
             else:
                 print(f"Invalid choice! Please enter a number between 1-{len(categories)}.")
         except ValueError:
@@ -389,14 +393,6 @@ class ExpenseTrackerUI:
     def run(self) -> None:
         """Run the main application loop."""
         print("Welcome to the Expense Tracker!")
-
-        menu_actions: Dict[str, Any] = {
-            "1": self.handle_add_expense,
-            "2": self.handle_view_all_expenses,
-            "3": self.handle_calculate_total,
-            "4": self.handle_view_by_category,
-            "5": self.handle_filter_by_category,
-        }
 
         while True:
             self.display_menu()
@@ -408,7 +404,7 @@ class ExpenseTrackerUI:
                     print("Goodbye!")
                     break
 
-                action = menu_actions.get(choice)
+                action = self._menu_actions.get(choice)
                 if action:
                     action()
                 else:

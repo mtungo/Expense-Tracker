@@ -1,27 +1,27 @@
 [
   {
-    "id": 1,
+    "id": "1",
     "amount": 12.5,
     "category": "food",
     "description": "Lunch",
     "date": "2026-04-02 17:13:28"
   },
   {
-    "id": 2,
+    "id": "2",
     "amount": 35.0,
     "category": "transport",
     "description": "Taxi",
     "date": "2026-04-02 17:13:28"
   },
   {
-    "id": 3,
+    "id": "3",
     "amount": 8.75,
     "category": "food",
     "description": "Coffee and snack",
     "date": "2026-04-02 17:13:28"
   },
   {
-    "id": 4,
+    "id": "4",
     "amount": 22.0,
     "category": "ds",
     "description": "no",
@@ -40,5 +40,12 @@
     "category": "Candy",
     "description": "This is a description",
     "date": "2026-04-03 10:32:19"
+  },
+  {
+    "id": "715008c6-5668-45be-91ed-d0b2680afc01",
+    "amount": 80.0,
+    "category": "\u00d3p",
+    "description": "sds",
+    "date": "2026-04-03 11:46:24"
   }
 ]

@@ -72,12 +72,23 @@ Expenses are saved to `expenses.json` in the project directory. Each entry has t
 }
 ```
 
+## Testing
+
+Run the test suite with pytest:
+
+```bash
+pytest test_expense_tracker.py -v
+```
+
+The suite covers all core classes: `Expense`, `InputValidator`, `JsonFileStorage`, `ExpenseTracker`, and `TableFormatter`.
+
 ## Project Structure
 
 ```
 expense-tracker/
-  expense_tracker.py   # All application code (models, storage, UI)
-  expenses.json        # Data file (created on first use)
+  expense_tracker.py       # All application code (models, storage, UI)
+  test_expense_tracker.py  # Test suite (pytest)
+  expenses.json            # Data file (created on first use)
 ```
 
 ## API Reference
@@ -109,7 +120,7 @@ Add a new expense and persist it to disk.
 - `description` (str): Brief description of the expense
 
 **Returns:**
-- `bool`: `True` if expense was added successfully
+- `Expense | None`: The created `Expense` if successful, `None` otherwise
 
 #### `get_all_expenses()`
 
@@ -149,9 +160,36 @@ Get a sorted list of all unique categories.
 **Returns:**
 - `list[str]`: Unique category names
 
+### `InputValidator`
+
+Static validation methods for user input.
+
+- `validate_amount(amount)` — returns `True` if amount is positive
+- `validate_text_field(text)` — returns `True` if non-empty and at most 100 characters
+- `validate_choice(choice, min_val, max_val)` — returns `True` if choice is within range
+
+### `TableFormatter`
+
+Static methods for formatting expense data in tables.
+
+- `print_expenses_table(expenses)` — display all expenses in a formatted table
+- `print_category_breakdown(category_totals)` — display spending by category with percentages
+- `print_category_expenses(expenses, category)` — display expenses for a single category
+
+### `DataStorage` (ABC)
+
+Abstract base class for storage backends. Implement `save_expenses` and `load_expenses` to create a custom backend.
+
 ### `JsonFileStorage`
 
 Default storage backend using a local JSON file.
 
 - `JsonFileStorage(file_path="expenses.json")` — initialise with optional custom file path
 - Implements `DataStorage` ABC — can be swapped for custom storage backends
+
+### `ExpenseTrackerUI`
+
+Interactive command-line interface.
+
+- `ExpenseTrackerUI(tracker)` — initialise with an `ExpenseTracker` instance
+- `run()` — start the interactive menu loop
