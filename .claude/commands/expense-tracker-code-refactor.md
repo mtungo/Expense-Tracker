@@ -29,9 +29,19 @@ Refactor the entire codebase
    - Type hints
    - Constants for magic numbers
 
-4. **Run tests** to ensure nothing broke: `pytest tests/ -v`
+4. **Ensure test coverage:**
+   - If tests exist:
+     - Update tests if needed
+   - If tests do not exist:
+     - Create pytest unit tests in `./` directory
+   - Cover:
+     - Main functionality
+     - Edge cases
+     - Error handling
 
-5. **Show before/after comparison**
+5. **Run tests** to ensure nothing broke: `pytest tests/ -v`
+
+6. **Show before/after comparison**
 
 ## Refactoring Checklist
 

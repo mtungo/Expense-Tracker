@@ -13,6 +13,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from collections import defaultdict
 from typing import List, Dict, Any, Optional
 from uuid import uuid4
 
@@ -58,7 +59,7 @@ class Expense:
     def from_dict(cls, data: Dict[str, Any]) -> "Expense":
         """Create expense from dictionary."""
         return cls(
-            expense_id=data["id"],
+            expense_id=str(data["id"]),
             amount=data["amount"],
             category=data["category"],
             description=data["description"],
@@ -99,21 +100,39 @@ class TableFormatter:
         print(char * width)
 
     @staticmethod
+    def _print_table(headers: str, rows: List[str], width: int = TABLE_WIDTH_FULL,
+                     title: Optional[str] = None) -> None:
+        """Print a formatted table with separator lines."""
+        TableFormatter.print_separator(width)
+        if title:
+            print(title)
+            TableFormatter.print_separator(width)
+        print(headers)
+        TableFormatter.print_separator(width)
+        for row in rows:
+            print(row)
+        TableFormatter.print_separator(width)
+
+    @staticmethod
+    def _format_expense_row(expense: Expense, include_category: bool = True) -> str:
+        """Format a single expense as a table row."""
+        expense_id_short = expense.expense_id[:8]
+        if include_category:
+            return (f"{expense_id_short:<8} {expense.date:<20} {expense.category:<15} "
+                    f"{CURRENCY_SYMBOL}{expense.amount:<9.2f} {expense.description}")
+        return (f"{expense_id_short:<8} {expense.date:<20} "
+                f"{CURRENCY_SYMBOL}{expense.amount:<9.2f} {expense.description}")
+
+    @staticmethod
     def print_expenses_table(expenses: List[Expense]) -> None:
         """Print expenses in a formatted table."""
         if not expenses:
             print("No expenses recorded.")
             return
 
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
-        print(f"{'ID':<8} {'Date':<20} {'Category':<15} {'Amount':<10} {'Description'}")
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
-
-        for expense in expenses:
-            expense_id_short = expense.expense_id[:8]
-            print(f"{expense_id_short:<8} {expense.date:<20} {expense.category:<15} "
-                  f"{CURRENCY_SYMBOL}{expense.amount:<9.2f} {expense.description}")
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
+        headers = f"{'ID':<8} {'Date':<20} {'Category':<15} {'Amount':<10} {'Description'}"
+        rows = [TableFormatter._format_expense_row(e) for e in expenses]
+        TableFormatter._print_table(headers, rows)
 
     @staticmethod
     def print_category_breakdown(category_totals: Dict[str, float]) -> None:
@@ -140,21 +159,12 @@ class TableFormatter:
             print(f"No expenses found for category: {category}")
             return
 
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
-        print(f"Expenses for Category: {category}")
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
-        print(f"{'ID':<8} {'Date':<20} {'Amount':<10} {'Description'}")
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
+        headers = f"{'ID':<8} {'Date':<20} {'Amount':<10} {'Description'}"
+        rows = [TableFormatter._format_expense_row(e, include_category=False) for e in expenses]
+        total = sum(e.amount for e in expenses)
 
-        total_for_category = 0
-        for expense in expenses:
-            expense_id_short = expense.expense_id[:8]
-            print(f"{expense_id_short:<8} {expense.date:<20} "
-                  f"{CURRENCY_SYMBOL}{expense.amount:<9.2f} {expense.description}")
-            total_for_category += expense.amount
-
-        TableFormatter.print_separator(TABLE_WIDTH_FULL)
-        print(f"Total for {category}: {CURRENCY_SYMBOL}{total_for_category:.2f}")
+        TableFormatter._print_table(headers, rows, title=f"Expenses for Category: {category}")
+        print(f"Total for {category}: {CURRENCY_SYMBOL}{total:.2f}")
         print(f"Number of expenses: {len(expenses)}")
 
 
@@ -216,7 +226,7 @@ class ExpenseTracker:
         self.expenses: List[Expense] = []
         self.load_data()
 
-    def add_expense(self, amount: float, category: str, description: str) -> bool:
+    def add_expense(self, amount: float, category: str, description: str) -> Optional[Expense]:
         """
         Add a new expense to the tracker.
 
@@ -226,20 +236,19 @@ class ExpenseTracker:
             description: Description of the expense
 
         Returns:
-            True if expense was added successfully
+            The created Expense if successful, None otherwise
         """
         if not InputValidator.validate_amount(amount):
-            return False
+            return None
         if not InputValidator.validate_text_field(category):
-            return False
+            return None
         if not InputValidator.validate_text_field(description):
-            return False
+            return None
 
         expense = Expense.create_new(amount, category.strip(), description.strip())
         self.expenses.append(expense)
         self.save_data()
-        print(f"Expense added: {CURRENCY_SYMBOL}{amount:.2f} for {category}")
-        return True
+        return expense
 
     def get_all_expenses(self) -> List[Expense]:
         """Get all expenses."""
@@ -252,8 +261,7 @@ class ExpenseTracker:
         Returns:
             Total spending amount
         """
-        total = sum(expense.amount for expense in self.expenses)
-        return total
+        return sum(expense.amount for expense in self.expenses)
 
     def get_spending_by_category(self) -> Dict[str, float]:
         """
@@ -262,11 +270,10 @@ class ExpenseTracker:
         Returns:
             Dictionary mapping categories to total amounts
         """
-        category_totals: Dict[str, float] = {}
+        category_totals: Dict[str, float] = defaultdict(float)
         for expense in self.expenses:
-            category = expense.category
-            category_totals[category] = category_totals.get(category, 0) + expense.amount
-        return category_totals
+            category_totals[expense.category] += expense.amount
+        return dict(category_totals)
 
     def filter_by_category(self, category: str) -> List[Expense]:
         """
@@ -288,8 +295,7 @@ class ExpenseTracker:
         Returns:
             List of unique categories
         """
-        categories = list(set(expense.category for expense in self.expenses))
-        return sorted(categories)
+        return sorted({expense.category for expense in self.expenses})
 
     def save_data(self) -> None:
         """Save expenses data using storage implementation."""
@@ -328,15 +334,13 @@ class ExpenseTrackerUI:
         try:
             amount_str = input(f"Enter amount: {CURRENCY_SYMBOL}")
             amount = float(amount_str)
-
-            if amount <= 0:
-                print("Amount must be positive!")
-                return
-
             category = input("Enter category: ").strip()
             description = input("Enter description: ").strip()
 
-            if not self.tracker.add_expense(amount, category, description):
+            expense = self.tracker.add_expense(amount, category, description)
+            if expense:
+                print(f"Expense added: {CURRENCY_SYMBOL}{expense.amount:.2f} for {expense.category}")
+            else:
                 print("Failed to add expense. Please check your input.")
 
         except ValueError:
@@ -386,25 +390,27 @@ class ExpenseTrackerUI:
         """Run the main application loop."""
         print("Welcome to the Expense Tracker!")
 
+        menu_actions: Dict[str, Any] = {
+            "1": self.handle_add_expense,
+            "2": self.handle_view_all_expenses,
+            "3": self.handle_calculate_total,
+            "4": self.handle_view_by_category,
+            "5": self.handle_filter_by_category,
+        }
+
         while True:
             self.display_menu()
 
             try:
                 choice = input("\nEnter your choice (1-6): ").strip()
 
-                if choice == "1":
-                    self.handle_add_expense()
-                elif choice == "2":
-                    self.handle_view_all_expenses()
-                elif choice == "3":
-                    self.handle_calculate_total()
-                elif choice == "4":
-                    self.handle_view_by_category()
-                elif choice == "5":
-                    self.handle_filter_by_category()
-                elif choice == "6":
+                if choice == "6":
                     print("Goodbye!")
                     break
+
+                action = menu_actions.get(choice)
+                if action:
+                    action()
                 else:
                     print("Invalid choice! Please enter a number between 1-6.")
 

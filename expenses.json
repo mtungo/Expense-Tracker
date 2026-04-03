@@ -33,5 +33,12 @@
     "category": "Car",
     "description": "new car",
     "date": "2026-04-03 10:22:32"
+  },
+  {
+    "id": "adc7077f-b136-47d9-8c45-0a2990c5195a",
+    "amount": 40.0,
+    "category": "Candy",
+    "description": "This is a description",
+    "date": "2026-04-03 10:32:19"
   }
 ]
